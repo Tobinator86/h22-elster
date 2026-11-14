@@ -1,10 +1,10 @@
 configuration:
-  atelier_url:
-    name: Adresse des Ateliers
-    description: z. B. https://galerieh22.de oder https://beta.galerieh22.de (ohne /atelier)
+  website_url:
+    name: Adresse der Website
+    description: Grundadresse der Website mit der ELSTER-Schnittstelle (/elster/api), z. B. https://www.example.de
   schluessel:
     name: Schlüssel
-    description: Im Atelier unter Finanzen → Umsatzsteuer → „Verbindung zur ELSTER-App“ erzeugen
+    description: Wird auf der Website erzeugt (Verbindung zur ELSTER-App)
   testbetrieb:
     name: Testbetrieb
     description: An = nur Testaufträge (Testmerker, Test-Hersteller-ID, Test-Steuernummer, Testzertifikat). Erst ausschalten, wenn die eigene Hersteller-ID bestätigt ist und ein Testversand geklappt hat.
@@ -25,4 +25,4 @@ configuration:
     description: 13-stellige Test-Steuernummer (ELSTER-Format) – im Testbetrieb statt der echten
   intervall:
     name: Abfrage alle … Sekunden
-    description: Wie oft die App beim Atelier nach neuen Aufträgen fragt
+    description: Wie oft die App bei der Website nach neuen Aufträgen fragt

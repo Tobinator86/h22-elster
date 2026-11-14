@@ -1,5 +1,5 @@
 """
-H22 ELSTER – holt Aufträge beim Atelier der Galerie H22 ab, prüft bzw. sendet sie mit ERiC an ELSTER
+ELSTER-Übermittlung – holt Aufträge bei einer Website ab, prüft bzw. sendet sie mit ERiC an ELSTER
 und meldet das Ergebnis zurück. Läuft als Home-Assistant-App (Einstellungen in /data/options.json).
 
 ERiC-Aufrufe nach der ERiC-API-Referenz 44.3 (ericapi.h, eric_types.h):
@@ -21,7 +21,7 @@ import urllib.error
 import urllib.request
 import zipfile
 
-VERSION = "0.1.1"
+VERSION = "0.2.0"
 OPTIONS = "/data/options.json"
 ERIC_ROOT = "/data/eric"
 LOG_DIR = "/data/log"
@@ -42,7 +42,7 @@ def log(*a):
 def load_options():
     with open(OPTIONS, encoding="utf-8") as f:
         o = json.load(f)
-    o["atelier_url"] = str(o.get("atelier_url", "")).rstrip("/")
+    o["website_url"] = str(o.get("website_url", "")).rstrip("/")
     o["intervall"] = max(20, int(o.get("intervall") or 60))
     return o
 
@@ -184,31 +184,31 @@ class Eric:
                 self.lib.EricCloseHandleToCertificate(handle.value)
 
 
-# ---------------------------------------------------------------- Atelier
+# ---------------------------------------------------------------- Website
 
-class Atelier:
+class Website:
     def __init__(self, o, info):
-        self.url = o["atelier_url"] + "/elster/api"
+        self.url = o["website_url"] + "/elster/api"
         self.key = o["schluessel"]
         self.info = info
 
     def call(self, schritt, **data):
         body = json.dumps({"schritt": schritt, "app": self.info, **data}).encode("utf-8")
         req = urllib.request.Request(self.url, data=body, method="POST", headers={
-            "Authorization": "Bearer " + self.key, "Content-Type": "application/json", "User-Agent": f"h22-elster/{VERSION}"})
+            "Authorization": "Bearer " + self.key, "Content-Type": "application/json", "User-Agent": f"elster-uebermittlung/{VERSION}"})
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
                 raw = r.read().decode("utf-8", "replace")
             try:
                 return json.loads(raw or "{}")
             except ValueError:
-                raise RuntimeError("Atelier antwortet nicht wie erwartet – hat die Seite schon die ELSTER-Schnittstelle (/elster/api)? Adresse prüfen.")
+                raise RuntimeError("Website antwortet nicht wie erwartet – hat die Seite die ELSTER-Schnittstelle (/elster/api)? Adresse prüfen.")
         except urllib.error.HTTPError as e:
             try:
                 msg = json.loads(e.read().decode("utf-8")).get("fehler", "")
             except Exception:
                 msg = ""
-            raise RuntimeError(f"Atelier antwortet {e.code}: {msg or e.reason}")
+            raise RuntimeError(f"Website antwortet {e.code}: {msg or e.reason}")
 
 
 # ---------------------------------------------------------------- Aufträge
@@ -243,7 +243,7 @@ def find_test_cert(eric_dir):
 
 
 def handle(job, o, eric, eric_dir):
-    """Bearbeitet einen Auftrag; gibt das Ergebnis fürs Atelier zurück."""
+    """Bearbeitet einen Auftrag; gibt das Ergebnis für die Website zurück."""
     jid, modus = int(job["id"]), job["modus"]
     test = bool(job.get("test"))
     if not test and o["testbetrieb"]:
@@ -310,7 +310,7 @@ def main():
     eric_dir = os.path.dirname(os.path.dirname(libdir)) if os.path.basename(libdir) == "lib" else libdir
     eric = Eric(libdir)
     ever = eric.version()
-    log(f"H22 ELSTER {VERSION}, ERiC {ever}, {'Testbetrieb' if o['testbetrieb'] else 'ECHTBETRIEB'}, Atelier {o['atelier_url']}")
+    log(f"ELSTER-Übermittlung {VERSION}, ERiC {ever}, {'Testbetrieb' if o['testbetrieb'] else 'ECHTBETRIEB'}, Website {o['website_url']}")
     try:
         tf = eric.testfinanzaemter()
         log("Testfinanzämter (Auszug): " + re.sub(r"\s+", " ", tf)[:600])
@@ -318,17 +318,19 @@ def main():
         log(f"Testfinanzämter nicht abrufbar: {e}")
     certs = find_test_cert(eric_dir)
     log("Zertifikate im ERiC-Paket: " + (", ".join(os.path.relpath(c, eric_dir) for c in certs[:6]) or "keine"))
+    if not o["website_url"].startswith("https://"):
+        log("Keine Adresse der Website eingetragen (https://…) – bitte in der App-Konfiguration ergänzen.")
     if not o.get("schluessel"):
-        log("Kein Schlüssel eingetragen – bitte im Atelier erzeugen und in der App-Konfiguration eintragen.")
+        log("Kein Schlüssel eingetragen – bitte auf der Website erzeugen und in der App-Konfiguration eintragen.")
     own_cert = o.get("zertifikat") or ""
     info = {"version": VERSION, "eric": ever, "test": bool(o["testbetrieb"]),
             "hersteller": bool(o.get("hersteller_id")), "zertifikat": os.path.isfile(own_cert)}
-    at = Atelier(o, info)
+    at = Website(o, info)
     try:
         r = at.call("hallo")
-        log(f"Atelier erreicht ({'Beta' if r.get('beta') else 'Live'}, Atelier {'im Testbetrieb' if r.get('test') else 'im Echtbetrieb'}).")
+        log(f"Website erreicht ({'Beta, ' if r.get('beta') else ''}{'Testbetrieb' if r.get('test') else 'Echtbetrieb'}).")
     except Exception as e:
-        log(f"Atelier nicht erreichbar: {e}")
+        log(f"Website nicht erreichbar: {e}")
 
     while True:
         try:
