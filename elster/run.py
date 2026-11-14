@@ -21,7 +21,7 @@ import urllib.error
 import urllib.request
 import zipfile
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 OPTIONS = "/data/options.json"
 ERIC_ROOT = "/data/eric"
 LOG_DIR = "/data/log"
@@ -144,10 +144,12 @@ class Eric:
 
     def version(self):
         rc, xml = self._buf_call(self.lib.EricVersion)
-        m = re.search(r"(\d+\.\d+\.\d+(?:\.\d+)?)", xml)
-        if not m:
-            log("EricVersion (Rohdaten): " + re.sub(r"\s+", " ", xml)[:300])
-        return m.group(1) if m else "?"
+        # je Bibliothek <Name>…</Name><Produktversion>44, 3, 4, 0</Produktversion>; maßgeblich ist libericapi
+        for name, ver in re.findall(r"<Name>([^<]+)</Name>\s*<Produktversion>([^<]+)</Produktversion>", xml):
+            if "ericapi" in name:
+                return ".".join(p.strip() for p in ver.split(","))
+        m = re.search(r"<Produktversion>([^<]+)</Produktversion>", xml)
+        return ".".join(p.strip() for p in m.group(1).split(",")) if m else "?"
 
     def cert_check(self, path):
         """Öffnet das Zertifikat nur zum Prüfen (ohne PIN) – ob ERiC die Datei als Zertifikat erkennt."""
