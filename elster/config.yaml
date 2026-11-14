@@ -1,5 +1,5 @@
 name: H22 ELSTER
-version: "0.1.0"
+version: "0.1.1"
 slug: h22_elster
 description: Umsatzsteuer-Voranmeldung der Galerie H22 über ERiC an ELSTER übermitteln
 url: https://github.com/Tobinator86/h22-elster

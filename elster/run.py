@@ -21,7 +21,7 @@ import urllib.error
 import urllib.request
 import zipfile
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 OPTIONS = "/data/options.json"
 ERIC_ROOT = "/data/eric"
 LOG_DIR = "/data/log"
@@ -144,8 +144,8 @@ class Eric:
 
     def version(self):
         rc, xml = self._buf_call(self.lib.EricVersion)
-        m = re.search(r"<Version>([^<]+)</Version>", xml)
-        return m.group(1) if m else ("?" if rc else xml[:60])
+        m = re.search(r"(\d+\.\d+\.\d+\.\d+)", xml)
+        return m.group(1) if m else "?"
 
     def testfinanzaemter(self):
         return self._buf_call(self.lib.EricHoleTestfinanzaemter)[1]
@@ -198,7 +198,11 @@ class Atelier:
             "Authorization": "Bearer " + self.key, "Content-Type": "application/json", "User-Agent": f"h22-elster/{VERSION}"})
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
-                return json.loads(r.read().decode("utf-8") or "{}")
+                raw = r.read().decode("utf-8", "replace")
+            try:
+                return json.loads(raw or "{}")
+            except ValueError:
+                raise RuntimeError("Atelier antwortet nicht wie erwartet – hat die Seite schon die ELSTER-Schnittstelle (/elster/api)? Adresse prüfen.")
         except urllib.error.HTTPError as e:
             try:
                 msg = json.loads(e.read().decode("utf-8")).get("fehler", "")
