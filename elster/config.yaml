@@ -1,5 +1,5 @@
 name: ELSTER-Übermittlung
-version: "0.2.0"
+version: "0.2.1"
 slug: elster_uebermittlung
 description: Holt Steueranmeldungen von einer Website ab und übermittelt sie mit ERiC an ELSTER
 url: https://github.com/Tobinator86/h22-elster

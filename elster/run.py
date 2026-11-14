@@ -21,7 +21,7 @@ import urllib.error
 import urllib.request
 import zipfile
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 OPTIONS = "/data/options.json"
 ERIC_ROOT = "/data/eric"
 LOG_DIR = "/data/log"
@@ -144,8 +144,19 @@ class Eric:
 
     def version(self):
         rc, xml = self._buf_call(self.lib.EricVersion)
-        m = re.search(r"(\d+\.\d+\.\d+\.\d+)", xml)
+        m = re.search(r"(\d+\.\d+\.\d+(?:\.\d+)?)", xml)
+        if not m:
+            log("EricVersion (Rohdaten): " + re.sub(r"\s+", " ", xml)[:300])
         return m.group(1) if m else "?"
+
+    def cert_check(self, path):
+        """Öffnet das Zertifikat nur zum Prüfen (ohne PIN) – ob ERiC die Datei als Zertifikat erkennt."""
+        h, pin_support = ctypes.c_uint32(0), ctypes.c_uint32(0)
+        rc = self.lib.EricGetHandleToCertificate(ctypes.byref(h), ctypes.byref(pin_support), path.encode())
+        if rc != 0:
+            return f"lässt sich nicht öffnen: {self.fehlertext(rc)} ({rc})"
+        self.lib.EricCloseHandleToCertificate(h.value)
+        return "von ERiC erkannt (PIN wird erst beim Senden geprüft)"
 
     def testfinanzaemter(self):
         return self._buf_call(self.lib.EricHoleTestfinanzaemter)[1]
@@ -323,6 +334,11 @@ def main():
     if not o.get("schluessel"):
         log("Kein Schlüssel eingetragen – bitte auf der Website erzeugen und in der App-Konfiguration eintragen.")
     own_cert = o.get("zertifikat") or ""
+    if os.path.isfile(own_cert):
+        log(f"Eigenes Zertifikat {own_cert}: {eric.cert_check(own_cert)}; PIN {'eingetragen' if o.get('pin') else 'FEHLT'}.")
+    else:
+        log(f"Eigenes Zertifikat {own_cert or '(kein Pfad)'}: nicht gefunden{' – im Testbetrieb wird das Testzertifikat genommen' if o['testbetrieb'] else ''}.")
+    log(f"Hersteller-ID: {'eingetragen' if o.get('hersteller_id') else 'fehlt (ELSTER sperrt die Test-ID 74931 – eigene ID nötig)'}.")
     info = {"version": VERSION, "eric": ever, "test": bool(o["testbetrieb"]),
             "hersteller": bool(o.get("hersteller_id")), "zertifikat": os.path.isfile(own_cert)}
     at = Website(o, info)
