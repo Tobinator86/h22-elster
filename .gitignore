@@ -1,0 +1,14 @@
+# ERiC (Lizenz der Steuerverwaltung) und Zugangsdaten gehören NIE ins Repository
+*.jar
+*.so
+*.so.*
+*.pfx
+*.p12
+*.pem
+*.key
+ERiC-*/
+eric/
+data/
+options.json
+__pycache__/
+*.pyc

@@ -1,0 +1,28 @@
+configuration:
+  atelier_url:
+    name: Adresse des Ateliers
+    description: z. B. https://galerieh22.de oder https://beta.galerieh22.de (ohne /atelier)
+  schluessel:
+    name: Schlüssel
+    description: Im Atelier unter Finanzen → Umsatzsteuer → „Verbindung zur ELSTER-App“ erzeugen
+  testbetrieb:
+    name: Testbetrieb
+    description: An = nur Testaufträge (Testmerker, Test-Hersteller-ID, Test-Steuernummer, Testzertifikat). Erst ausschalten, wenn die eigene Hersteller-ID bestätigt ist und ein Testversand geklappt hat.
+  hersteller_id:
+    name: Hersteller-ID
+    description: Ihre Hersteller-ID von ELSTER (im Testbetrieb leer lassen = Test-ID 74931)
+  eric_datei:
+    name: ERiC-Paket
+    description: Pfad zur ERiC-Datei für Linux x86-64 (.jar), z. B. /share/ERiC-44.3.6.0-Linux-x86_64.jar
+  zertifikat:
+    name: ELSTER-Zertifikat
+    description: Pfad zur .pfx-Datei aus Mein ELSTER (im App-Ordner, z. B. /config/zertifikat.pfx). Im Testbetrieb wird das Testzertifikat aus ERiC genommen, wenn die Datei fehlt.
+  pin:
+    name: PIN des Zertifikats
+    description: Passwort der .pfx-Datei (im Testbetrieb leer = 123456 für das ERiC-Testzertifikat)
+  test_steuernummer:
+    name: Steuernummer im Testbetrieb
+    description: 13-stellige Test-Steuernummer (ELSTER-Format) – im Testbetrieb statt der echten
+  intervall:
+    name: Abfrage alle … Sekunden
+    description: Wie oft die App beim Atelier nach neuen Aufträgen fragt

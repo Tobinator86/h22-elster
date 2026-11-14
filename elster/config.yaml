@@ -1,0 +1,35 @@
+name: H22 ELSTER
+version: "0.1.0"
+slug: h22_elster
+description: Umsatzsteuer-Voranmeldung der Galerie H22 über ERiC an ELSTER übermitteln
+url: https://github.com/Tobinator86/h22-elster
+arch:
+  - amd64
+init: false
+startup: application
+boot: auto
+map:
+  - type: share
+    read_only: true
+  - type: addon_config
+    read_only: false
+options:
+  atelier_url: "https://beta.galerieh22.de"
+  schluessel: ""
+  testbetrieb: true
+  hersteller_id: ""
+  eric_datei: "/share/ERiC-44.3.6.0-Linux-x86_64.jar"
+  zertifikat: "/config/zertifikat.pfx"
+  pin: ""
+  test_steuernummer: "1096081508187"
+  intervall: 60
+schema:
+  atelier_url: url
+  schluessel: password
+  testbetrieb: bool
+  hersteller_id: "match(^[0-9]{0,10}$)"
+  eric_datei: str
+  zertifikat: str
+  pin: "password?"
+  test_steuernummer: "match(^[0-9]{13}$)"
+  intervall: "int(20,3600)"
